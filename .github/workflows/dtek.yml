@@ -16,7 +16,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -36,7 +36,7 @@ jobs:
       - run: python -u p.py --once
         env:
           PYTHONIOENCODING: utf-8
-          DTEK_LISTEN_SECONDS: '60'
+          DTEK_LISTEN_SECONDS: '150'
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       - uses: actions/cache/save@v4
         if: always()
@@ -57,7 +57,7 @@ jobs:
       - name: Запустить следующий проход
         if: always()
         run: |
-          sleep 30
+          sleep 5
           gh workflow run dtek.yml --repo "$GITHUB_REPOSITORY"
         env:
           GH_TOKEN: ${{ github.token }}

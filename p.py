@@ -441,7 +441,10 @@ class DTEKMonitor:
 def run_once():
     """Один проход для запуска по расписанию (GitHub Actions): страница -> график -> рассылка -> выход"""
     monitor = DTEKMonitor()
-    # Сообщения бота обрабатываем только после скрапинга: schedule.json должен быть свежим
+    # Сразу отвечаем на накопившиеся сообщения последним удачным графиком из кэша (schedule.json),
+    # чтобы не ждать скрапинга. Без кэшированного графика ждём свежий
+    if os.path.exists(tgbot.SCHEDULE_FILE):
+        tgbot.poll_once(monitor.log_message)
     if not monitor.init_driver():
         return 1
     ok = False
