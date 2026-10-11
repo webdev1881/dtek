@@ -10,6 +10,20 @@ import time
 from datetime import datetime
 import os
 import random
+import tgbot
+
+def load_env(path='.env'):
+    """Читаем KEY=VALUE из .env в os.environ (без внешних зависимостей)"""
+    if not os.path.exists(path):
+        return
+    with open(path, encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, value = line.split('=', 1)
+                os.environ.setdefault(key.strip(), value.strip())
+
+load_env()
 
 class DTEKMonitor:
     def __init__(self):
@@ -131,6 +145,8 @@ class DTEKMonitor:
 
         groups = sorted({g for day in fact.get('data', {}).values() for g in day})
         self.log_message(f"✓ График отключений: групп {len(groups)}, обновлено на сайте: {fact.get('update')}", "SUCCESS")
+        
+        tgbot.notify_all(fact, self.log_message)
 
     def init_driver(self):
         """Инициализация Chrome WebDriver с максимальной защитой от детекта"""
@@ -423,6 +439,7 @@ class DTEKMonitor:
 
 def main():
     monitor = DTEKMonitor()
+    tgbot.start_polling(monitor.log_message)
     monitor.monitor_continuous()
 
 if __name__ == "__main__":

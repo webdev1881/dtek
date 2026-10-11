@@ -2,3 +2,5 @@
 logs/
 debug/
 __pycache__/
+.env
+bot_state.json
