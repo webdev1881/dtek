@@ -60,10 +60,10 @@ async function sendSchedule(env, chatId, group, title = '') {
   const meta = (await getJSON(env, 'meta')) || {};
   const days = await getJSON(env, `img:${group}`);
   if (!days || !days.length) {
-    await tg(env, 'sendMessage', { chat_id: chatId, text: `График группы ${label(group)} ещё не получен.` });
+    await tg(env, 'sendMessage', { chat_id: chatId, text: `Графік групи ${label(group)} ще не отримано.` });
     return false;
   }
-  const caption = [title, `Сайт: ${meta.update ?? '?'}`, `Проверено: ${meta.checked ?? '?'}`].filter(Boolean).join('\n');
+  const caption = [title, `Сайт: ${meta.update ?? '?'}`, `Перевірено: ${meta.checked ?? '?'}`].filter(Boolean).join('\n');
   let ok = false;
   for (const day of days) ok = (await sendPhoto(env, chatId, day.png, caption)) || ok;
   return ok;
@@ -87,7 +87,7 @@ async function onCallback(env, cb) {
   await setGroups(env, chatId, groups);
   await tg(env, 'answerCallbackQuery', {
     callback_query_id: cb.id,
-    text: `Группа ${label(group)} ${added ? 'добавлена' : 'убрана'}`,
+    text: `Група ${label(group)} ${added ? 'додана' : 'прибрана'}`,
   });
   await tg(env, 'editMessageReplyMarkup', {
     chat_id: chatId,
@@ -101,7 +101,7 @@ async function askGroups(env, chatId) {
   const groups = await getGroups(env, chatId);
   await tg(env, 'sendMessage', {
     chat_id: chatId,
-    text: 'Выберите группы отключений. Можно несколько: нажатие добавляет группу, повторное — убирает (✓ — выбрана).',
+    text: 'Оберіть групи відключень. Можна кілька: натискання додає групу, повторне — прибирає (✓ — обрана).',
     reply_markup: keyboard(groups),
   });
 }
@@ -111,17 +111,17 @@ async function onMessage(env, msg) {
   const text = (msg.text || '').trim().toLowerCase().split('@')[0];
   const groups = await getGroups(env, chatId);
   const has = Object.keys(groups).length > 0;
-  if ((text === '/schedule' || text === '/график') && has) {
+  if ((text === '/schedule' || text === '/графік' || text === '/график') && has) {
     for (const g of Object.keys(groups)) await sendSchedule(env, chatId, g);
   } else if (text.startsWith('/stop')) {
     await setGroups(env, chatId, {});
-    await tg(env, 'sendMessage', { chat_id: chatId, text: 'Рассылка отключена. /start — подписаться снова.' });
+    await tg(env, 'sendMessage', { chat_id: chatId, text: 'Розсилку вимкнено. /start — підписатися знову.' });
   } else if (text.startsWith('/start') || text.startsWith('/group') || !has) {
     await askGroups(env, chatId);
   } else {
     await tg(env, 'sendMessage', {
       chat_id: chatId,
-      text: '/schedule — график, /group — выбрать группы, /stop — отключить рассылку',
+      text: '/schedule — графік, /group — обрати групи, /stop — вимкнути розсилку',
     });
   }
 }
@@ -156,7 +156,7 @@ async function notifyAll(env, meta) {
       for (const g of Object.keys(groups)) {
         const hash = (meta.hashes && meta.hashes[g]) || '';
         if (hash === groups[g]) continue;
-        if (await sendSchedule(env, chatId, g, 'График изменился!')) {
+        if (await sendSchedule(env, chatId, g, 'Графік змінився!')) {
           groups[g] = hash;
           changed = true;
         }
