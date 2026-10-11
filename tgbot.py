@@ -5,6 +5,7 @@ import time
 import urllib.parse
 import urllib.request
 import uuid
+from datetime import datetime
 
 import schedule_image
 
@@ -49,10 +50,19 @@ def _send_photo(chat_id, png, caption=''):
         return False
 
 
+def _checked_at():
+    """Время последней проверки сайта (время записи schedule.json) по Киеву"""
+    try:
+        ts = os.path.getmtime(SCHEDULE_FILE)
+    except OSError:
+        ts = time.time()
+    return datetime.fromtimestamp(ts, schedule_image.KYIV).strftime('%d.%m.%Y %H:%M')
+
+
 def send_schedule(chat_id, fact, group, title=''):
     """График группы картинками (по одной на сутки). Если картинку нарисовать не вышло — текстом"""
     ok = False
-    caption = '\n'.join(filter(None, [title, f'Обновлено на сайте: {fact.get("update", "?")}']))
+    caption = '\n'.join(filter(None, [title, f'Обновлено на сайте: {fact.get("update", "?")}', f'Проверено: {_checked_at()}']))
     for ts, day in sorted(fact.get('data', {}).items()):
         hours = day.get(group)
         if hours is None:
