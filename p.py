@@ -97,11 +97,41 @@ class DTEKMonitor:
                 f.write("\n" + "="*80 + "\n\n")
         
         self.log_message(f"✓ Результаты сохранены: {json_file}", "SUCCESS")
-        
+
+        self.save_schedule(html_content, timestamp)
+
         # Обновляем последний успешный результат
         with open('dtek_scripts.json', 'w', encoding='utf-8') as f:
             json.dump(scripts_data, f, ensure_ascii=False, indent=2)
     
+    def extract_schedule(self, html_content):
+        """Достаём график отключений из inline-скрипта (DisconSchedule.fact = {...})"""
+        marker = 'DisconSchedule.fact = '
+        start = html_content.find(marker)
+        if start == -1:
+            return None
+        try:
+            fact, _ = json.JSONDecoder().raw_decode(html_content, start + len(marker))
+            return fact
+        except ValueError as e:
+            self.log_message(f"Не удалось разобрать DisconSchedule.fact: {e}", "WARNING")
+            return None
+
+    def save_schedule(self, html_content, timestamp):
+        """Сохранение графика отключений: в logs по времени и последний в schedule.json"""
+        fact = self.extract_schedule(html_content)
+        if not fact:
+            self.log_message("График отключений (DisconSchedule.fact) не найден на странице", "WARNING")
+            return
+
+        with open(os.path.join(self.log_dir, f'schedule_{timestamp}.json'), 'w', encoding='utf-8') as f:
+            json.dump(fact, f, ensure_ascii=False, indent=2)
+        with open('schedule.json', 'w', encoding='utf-8') as f:
+            json.dump(fact, f, ensure_ascii=False, indent=2)
+
+        groups = sorted({g for day in fact.get('data', {}).values() for g in day})
+        self.log_message(f"✓ График отключений: групп {len(groups)}, обновлено на сайте: {fact.get('update')}", "SUCCESS")
+
     def init_driver(self):
         """Инициализация Chrome WebDriver с максимальной защитой от детекта"""
         try:
