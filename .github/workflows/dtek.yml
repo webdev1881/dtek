@@ -5,6 +5,10 @@ on:
     - cron: '*/2 * * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  actions: write
+
 concurrency:
   group: dtek
   cancel-in-progress: false
@@ -45,3 +49,11 @@ jobs:
             logs/monitor.log
             debug/
           retention-days: 3
+      # cron у GitHub срабатывает нерегулярно, поэтому каждый запуск ставит в очередь следующий
+      - name: Запустить следующий проход
+        if: always()
+        run: |
+          sleep 30
+          gh workflow run dtek.yml --repo "$GITHUB_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ github.token }}
