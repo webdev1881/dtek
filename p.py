@@ -441,7 +441,7 @@ class DTEKMonitor:
 def run_once():
     """Один проход для запуска по расписанию (GitHub Actions): страница -> график -> рассылка -> выход"""
     monitor = DTEKMonitor()
-    tgbot.poll_once(monitor.log_message)
+    # Сообщения бота обрабатываем только после скрапинга: schedule.json должен быть свежим
     if not monitor.init_driver():
         return 1
     ok = False

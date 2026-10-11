@@ -25,10 +25,12 @@ jobs:
           cache: pip
       - run: sudo apt-get install -y -q fonts-dejavu-core
       - run: pip install -r requirements.txt
-      # состояние бота (подписчики) хранится в кэше, а не в публичном репозитории
+      # состояние бота (подписчики) и последний график хранятся в кэше, а не в публичном репозитории
       - uses: actions/cache/restore@v4
         with:
-          path: bot_state.json
+          path: |
+            bot_state.json
+            schedule.json
           key: bot-state-${{ github.run_id }}
           restore-keys: bot-state-
       - run: python -u p.py --once
@@ -39,7 +41,9 @@ jobs:
       - uses: actions/cache/save@v4
         if: always()
         with:
-          path: bot_state.json
+          path: |
+            bot_state.json
+            schedule.json
           key: bot-state-${{ github.run_id }}
       - uses: actions/upload-artifact@v4
         if: always()
