@@ -1,0 +1,7 @@
+name = "dtek-bot"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[[kv_namespaces]]
+binding = "DTEK"
+id = "e9e70aff16e2428aaefbca6cd8497f43"

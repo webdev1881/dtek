@@ -2,7 +2,7 @@ name: dtek
 
 on:
   schedule:
-    - cron: '*/2 * * * *'
+    - cron: '*/10 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,26 +25,11 @@ jobs:
           cache: pip
       - run: sudo apt-get install -y -q fonts-dejavu-core
       - run: pip install -r requirements.txt
-      # состояние бота (подписчики) и последний график хранятся в кэше, а не в публичном репозитории
-      - uses: actions/cache/restore@v4
-        with:
-          path: |
-            bot_state.json
-            schedule.json
-          key: bot-state-${{ github.run_id }}
-          restore-keys: bot-state-
       - run: python -u p.py --once
         env:
           PYTHONIOENCODING: utf-8
-          DTEK_LISTEN_SECONDS: '150'
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      - uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: |
-            bot_state.json
-            schedule.json
-          key: bot-state-${{ github.run_id }}
+          WORKER_URL: ${{ secrets.WORKER_URL }}
+          UPLOAD_TOKEN: ${{ secrets.UPLOAD_TOKEN }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -57,7 +42,7 @@ jobs:
       - name: Запустить следующий проход
         if: always()
         run: |
-          sleep 5
+          sleep 120
           gh workflow run dtek.yml --repo "$GITHUB_REPOSITORY"
         env:
           GH_TOKEN: ${{ github.token }}

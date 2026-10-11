@@ -11,7 +11,7 @@ from datetime import datetime
 import os
 import random
 import sys
-import tgbot
+import publish
 
 def load_env(path='.env'):
     """Читаем KEY=VALUE из .env в os.environ (без внешних зависимостей)"""
@@ -147,7 +147,7 @@ class DTEKMonitor:
         groups = sorted({g for day in fact.get('data', {}).values() for g in day})
         self.log_message(f"✓ График отключений: групп {len(groups)}, обновлено на сайте: {fact.get('update')}", "SUCCESS")
         
-        tgbot.notify_all(fact, self.log_message)
+        publish.publish(fact, self.log_message)
 
     def init_driver(self):
         """Инициализация Chrome WebDriver с максимальной защитой от детекта"""
@@ -441,10 +441,6 @@ class DTEKMonitor:
 def run_once():
     """Один проход для запуска по расписанию (GitHub Actions): страница -> график -> рассылка -> выход"""
     monitor = DTEKMonitor()
-    # Сразу отвечаем на накопившиеся сообщения последним удачным графиком из кэша (schedule.json),
-    # чтобы не ждать скрапинга. Без кэшированного графика ждём свежий
-    if os.path.exists(tgbot.SCHEDULE_FILE):
-        tgbot.poll_once(monitor.log_message)
     if not monitor.init_driver():
         return 1
     ok = False
@@ -456,18 +452,12 @@ def run_once():
             time.sleep(5)
     finally:
         monitor.driver.quit()
-    # Остаток времени слушаем бота (long polling), чтобы команды обрабатывались сразу, а не раз в 10 минут
-    deadline = time.time() + int(os.environ.get('DTEK_LISTEN_SECONDS', '420'))
-    while time.time() < deadline:
-        if not tgbot.poll_once(monitor.log_message, timeout=25):
-            time.sleep(5)
     return 0 if ok else 1
 
 def main():
     if '--once' in sys.argv:
         sys.exit(run_once())
     monitor = DTEKMonitor()
-    tgbot.start_polling(monitor.log_message)
     monitor.monitor_continuous()
 
 if __name__ == "__main__":
