@@ -4,7 +4,9 @@ import threading
 import time
 import urllib.parse
 import urllib.request
-from datetime import datetime
+import uuid
+
+import schedule_image
 
 STATE_FILE = 'bot_state.json'
 SCHEDULE_FILE = 'schedule.json'
@@ -25,6 +27,47 @@ def _api(method, params=None, timeout=20):
         return None
 
 
+def _send_photo(chat_id, png, caption=''):
+    """sendPhoto через multipart/form-data (стандартная библиотека)"""
+    token = os.environ.get('TELEGRAM_BOT_TOKEN')
+    if not token:
+        return False
+    boundary = uuid.uuid4().hex
+    nl = bytes([13, 10])  # CRLF
+    parts = []
+    for name, value in (('chat_id', str(chat_id)), ('caption', caption)):
+        parts.append(f'--{boundary}'.encode() + nl + f'Content-Disposition: form-data; name="{name}"'.encode() + nl + nl + value.encode() + nl)
+    parts.append(f'--{boundary}'.encode() + nl + b'Content-Disposition: form-data; name="photo"; filename="schedule.png"' + nl
+                 + b'Content-Type: image/png' + nl + nl + png + nl)
+    parts.append(f'--{boundary}--'.encode() + nl)
+    req = urllib.request.Request(f'https://api.telegram.org/bot{token}/sendPhoto', b''.join(parts),
+                                 {'Content-Type': f'multipart/form-data; boundary={boundary}'})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return r.status == 200
+    except Exception:
+        return False
+
+
+def send_schedule(chat_id, fact, group, title=''):
+    """График группы картинками (по одной на сутки). Если картинку нарисовать не вышло — текстом"""
+    ok = False
+    caption = '\n'.join(filter(None, [title, f'Обновлено на сайте: {fact.get("update", "?")}']))
+    for ts, day in sorted(fact.get('data', {}).items()):
+        hours = day.get(group)
+        if hours is None:
+            continue
+        try:
+            png = schedule_image.render_day(group, ts, hours)
+        except Exception:
+            continue
+        ok = _send_photo(chat_id, png, caption) or ok
+    if not ok:
+        text = '\n\n'.join(filter(None, [title, format_schedule(fact, group)]))
+        ok = bool(_api('sendMessage', {'chat_id': chat_id, 'text': text}))
+    return ok
+
+
 def _load_state():
     try:
         with open(STATE_FILE, encoding='utf-8') as f:
@@ -39,7 +82,7 @@ def _save_state(state):
 
 
 def _label(group):
-    return group[3:].removesuffix('.1')
+    return group[3:]
 
 
 def _group_keyboard():
@@ -86,7 +129,7 @@ def _fmt(minutes):
 def format_schedule(fact, group):
     lines = [f'Группа {_label(group)}, обновлено на сайте: {fact.get("update", "?")}']
     for ts, day in sorted(fact.get('data', {}).items()):
-        date = datetime.fromtimestamp(int(ts)).strftime('%d.%m.%Y')
+        date = schedule_image.day_date(ts).strftime('%d.%m.%Y')
         hours = day.get(group)
         if hours is None:
             continue
@@ -119,10 +162,9 @@ def _subscribe(chat_id, group):
         state = _load_state()
         state['users'][str(chat_id)] = {'group': group, 'hash': _group_hash(fact, group) if fact else ''}
         _save_state(state)
-    text = f'Группа {_label(group)} сохранена. Пришлю график, когда он изменится.'
+    _api('sendMessage', {'chat_id': chat_id, 'text': f'Группа {_label(group)} сохранена. Пришлю график, когда он изменится.'})
     if fact:
-        text += '\n\n' + format_schedule(fact, group)
-    _api('sendMessage', {'chat_id': chat_id, 'text': text})
+        send_schedule(chat_id, fact, group)
 
 
 def _handle(update, log):
@@ -142,7 +184,10 @@ def _handle(update, log):
     user = _load_state()['users'].get(str(chat_id))
     if text in ('/schedule', '/график') and user:
         fact = _current_fact()
-        _api('sendMessage', {'chat_id': chat_id, 'text': format_schedule(fact, user['group']) if fact else 'График ещё не получен.'})
+        if fact:
+            send_schedule(chat_id, fact, user['group'])
+        else:
+            _api('sendMessage', {'chat_id': chat_id, 'text': 'График ещё не получен.'})
     elif text.startswith('/stop'):
         with _lock:
             state = _load_state()
@@ -189,7 +234,7 @@ def notify_all(fact, log=print):
         h = _group_hash(fact, user['group'])
         if h == user.get('hash'):
             continue
-        if _api('sendMessage', {'chat_id': chat_id, 'text': 'График изменился!\n\n' + format_schedule(fact, user['group'])}):
+        if send_schedule(chat_id, fact, user['group'], 'График изменился!'):
             with _lock:
                 state = _load_state()
                 if chat_id in state['users']:
