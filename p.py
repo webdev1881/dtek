@@ -10,6 +10,7 @@ import time
 from datetime import datetime
 import os
 import random
+import sys
 import tgbot
 
 def load_env(path='.env'):
@@ -437,7 +438,27 @@ class DTEKMonitor:
                 except:
                     pass
 
+def run_once():
+    """Один проход для запуска по расписанию (GitHub Actions): страница -> график -> рассылка -> выход"""
+    monitor = DTEKMonitor()
+    tgbot.poll_once(monitor.log_message)
+    if not monitor.init_driver():
+        return 1
+    ok = False
+    try:
+        for attempt in range(1, 4):
+            if monitor.parse_once(attempt):
+                ok = True
+                break
+            time.sleep(5)
+    finally:
+        monitor.driver.quit()
+    tgbot.poll_once(monitor.log_message)
+    return 0 if ok else 1
+
 def main():
+    if '--once' in sys.argv:
+        sys.exit(run_once())
     monitor = DTEKMonitor()
     tgbot.start_polling(monitor.log_message)
     monitor.monitor_continuous()

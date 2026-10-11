@@ -57,18 +57,14 @@ def ask_group(chat_id):
     })
 
 
-def _outages(hours):
-    """Интервалы без света по часам 1..24. first/second — отключение в первую/вторую половину часа"""
+def _intervals(hours, statuses):
+    """Интервалы по часам 1..24 для заданных статусов. Статус -> (начало, конец) внутри часа в минутах"""
     segs = []
     for h in range(1, 25):
-        v = hours.get(str(h), 'yes')
-        start = h - 1
-        if v == 'no':
-            segs.append((start * 60, start * 60 + 60))
-        elif v == 'first':
-            segs.append((start * 60, start * 60 + 30))
-        elif v == 'second':
-            segs.append((start * 60 + 30, start * 60 + 60))
+        part = statuses.get(hours.get(str(h), 'yes'))
+        if part:
+            start = (h - 1) * 60
+            segs.append((start + part[0], start + part[1]))
     merged = []
     for s, e in segs:
         if merged and merged[-1][1] == s:
@@ -76,6 +72,11 @@ def _outages(hours):
         else:
             merged.append((s, e))
     return merged
+
+
+# no — час целиком, first/second — первые/вторые 30 минут; m* — то же, но «возможно»
+CERTAIN = {'no': (0, 60), 'first': (0, 30), 'second': (30, 60)}
+MAYBE = {'maybe': (0, 60), 'mfirst': (0, 30), 'msecond': (30, 60)}
 
 
 def _fmt(minutes):
@@ -89,11 +90,14 @@ def format_schedule(fact, group):
         hours = day.get(group)
         if hours is None:
             continue
-        outs = _outages(hours)
+        outs = _intervals(hours, CERTAIN)
+        maybe = _intervals(hours, MAYBE)
+        parts = []
         if outs:
-            lines.append(f'{date}: без света ' + ', '.join(f'{_fmt(s)}–{_fmt(e)}' for s, e in outs))
-        else:
-            lines.append(f'{date}: отключений нет')
+            parts.append('без света ' + ', '.join(f'{_fmt(s)}–{_fmt(e)}' for s, e in outs))
+        if maybe:
+            parts.append('возможно без света ' + ', '.join(f'{_fmt(s)}–{_fmt(e)}' for s, e in maybe))
+        lines.append(f'{date}: ' + '; '.join(parts) if parts else f'{date}: отключений нет')
     return '\n'.join(lines)
 
 
@@ -151,23 +155,29 @@ def _handle(update, log):
         _api('sendMessage', {'chat_id': chat_id, 'text': '/schedule — график, /group — сменить группу, /stop — отключить рассылку'})
 
 
+def poll_once(log=print, timeout=0):
+    """Один запрос getUpdates: обрабатывает накопившиеся команды и выбор группы. Возвращает False при ошибке"""
+    offset = _load_state().get('offset', 0)
+    res = _api('getUpdates', {'offset': offset, 'timeout': timeout}, timeout=timeout + 10)
+    if not res or not res.get('ok'):
+        return False
+    for upd in res['result']:
+        try:
+            _handle(upd, log)
+        except Exception as e:
+            log(f'Ошибка обработки апдейта бота: {e}')
+        with _lock:
+            state = _load_state()
+            state['offset'] = upd['update_id'] + 1
+            _save_state(state)
+    return True
+
+
 def poll_loop(log=print):
     """Long polling: принимаем команды и выбор группы. Запускать в отдельном потоке"""
     while True:
-        offset = _load_state().get('offset', 0)
-        res = _api('getUpdates', {'offset': offset, 'timeout': 25}, timeout=35)
-        if not res or not res.get('ok'):
+        if not poll_once(log, timeout=25):
             time.sleep(5)
-            continue
-        for upd in res['result']:
-            try:
-                _handle(upd, log)
-            except Exception as e:
-                log(f'Ошибка обработки апдейта бота: {e}')
-            with _lock:
-                state = _load_state()
-                state['offset'] = upd['update_id'] + 1
-                _save_state(state)
 
 
 def notify_all(fact, log=print):
