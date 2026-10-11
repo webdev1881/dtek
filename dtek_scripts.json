@@ -1,7 +1,7 @@
 [
   {
     "index": 1,
-    "src": "https://www.googletagmanager.com/gtag/js?id=G-HN94V8NN5L&cx=c&gtm=4e6a72h1",
+    "src": "https://www.googletagmanager.com/gtag/js?id=AW-18295839458&cx=c&gtm=4e6a72h1&is_td=1&v=3&t=t&pid=1368795913&gtm=45be6a72h1v9257250440za20gzb9257241934zd9257241934xf1&seq=2&exp=115938465~115938469~117776796~118897920~118897930~120213116~120385423~120469145~120469153~121046263~121046271~121246026~121246034&dl=www.dtek-kem.com.ua%2Fua%2Fshutdowns&tdp=AW-18295839458;257250440;1;6;0&mde=AW-18295839458;9_1;45_1;61_1;68_1&csp=AW-18295839458;9_1_32&z=0",
     "type": "text/javascript",
     "id": "",
     "content": "",
@@ -9,7 +9,7 @@
   },
   {
     "index": 2,
-    "src": "https://www.googletagmanager.com/gtag/js?id=G-B5BT53GY2T&cx=c&gtm=4e6a72h1",
+    "src": "https://www.googletagmanager.com/gtag/js?id=G-HN94V8NN5L&cx=c&gtm=4e6a72h1",
     "type": "text/javascript",
     "id": "",
     "content": "",
@@ -17,7 +17,7 @@
   },
   {
     "index": 3,
-    "src": "https://www.googletagmanager.com/gtag/js?id=G-4XQ0JLPPD8&cx=c&gtm=4e6a72h1",
+    "src": "https://www.googletagmanager.com/gtag/js?id=G-B5BT53GY2T&cx=c&gtm=4e6a72h1",
     "type": "text/javascript",
     "id": "",
     "content": "",
@@ -25,7 +25,7 @@
   },
   {
     "index": 4,
-    "src": "https://www.googletagmanager.com/gtag/js?id=AW-18295839458&cx=c&gtm=4e6a72h1",
+    "src": "https://www.googletagmanager.com/gtag/js?id=G-4XQ0JLPPD8&cx=c&gtm=4e6a72h1",
     "type": "text/javascript",
     "id": "",
     "content": "",
@@ -33,6 +33,14 @@
   },
   {
     "index": 5,
+    "src": "https://www.googletagmanager.com/gtag/js?id=AW-18295839458&cx=c&gtm=4e6a72h1",
+    "type": "text/javascript",
+    "id": "",
+    "content": "",
+    "content_length": 0
+  },
+  {
+    "index": 6,
     "src": "https://www.googletagmanager.com/gtm.js?id=GTM-T3ZJ2T3L",
     "type": "",
     "id": "",
@@ -40,7 +48,7 @@
     "content_length": 0
   },
   {
-    "index": 6,
+    "index": 7,
     "src": "",
     "type": "",
     "id": "",
@@ -48,7 +56,7 @@
     "content_length": 2285
   },
   {
-    "index": 7,
+    "index": 8,
     "src": "",
     "type": "",
     "id": "",
@@ -56,7 +64,7 @@
     "content_length": 48
   },
   {
-    "index": 8,
+    "index": 9,
     "src": "",
     "type": "",
     "id": "",
@@ -64,7 +72,7 @@
     "content_length": 53
   },
   {
-    "index": 9,
+    "index": 10,
     "src": "",
     "type": "",
     "id": "",
@@ -72,7 +80,7 @@
     "content_length": 52
   },
   {
-    "index": 10,
+    "index": 11,
     "src": "",
     "type": "",
     "id": "",
@@ -80,7 +88,7 @@
     "content_length": 56
   },
   {
-    "index": 11,
+    "index": 12,
     "src": "",
     "type": "",
     "id": "",
@@ -88,7 +96,7 @@
     "content_length": 63
   },
   {
-    "index": 12,
+    "index": 13,
     "src": "",
     "type": "",
     "id": "",
@@ -96,7 +104,7 @@
     "content_length": 60
   },
   {
-    "index": 13,
+    "index": 14,
     "src": "",
     "type": "",
     "id": "",
@@ -104,7 +112,7 @@
     "content_length": 49
   },
   {
-    "index": 14,
+    "index": 15,
     "src": "",
     "type": "",
     "id": "",
@@ -112,7 +120,7 @@
     "content_length": 390
   },
   {
-    "index": 15,
+    "index": 16,
     "src": "https://www.googletagmanager.com/gtag/js?id=G-DLFSTRRPM2",
     "type": "",
     "id": "",
@@ -120,7 +128,7 @@
     "content_length": 0
   },
   {
-    "index": 16,
+    "index": 17,
     "src": "",
     "type": "",
     "id": "",
@@ -128,7 +136,7 @@
     "content_length": 166
   },
   {
-    "index": 17,
+    "index": 18,
     "src": "",
     "type": "",
     "id": "",
@@ -136,7 +144,7 @@
     "content_length": 412
   },
   {
-    "index": 18,
+    "index": 19,
     "src": "https://static.hotjar.com/c/hotjar-5026684.js?sv=6",
     "type": "",
     "id": "",
@@ -144,7 +152,7 @@
     "content_length": 0
   },
   {
-    "index": 19,
+    "index": 20,
     "src": "",
     "type": "application/ld+json",
     "id": "",
@@ -152,7 +160,7 @@
     "content_length": 1274
   },
   {
-    "index": 20,
+    "index": 21,
     "src": "https://script.hotjar.com/modules.ac003456795fba9e297a.js",
     "type": "",
     "id": "",
@@ -160,15 +168,15 @@
     "content_length": 0
   },
   {
-    "index": 21,
-    "src": "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/18295839458/?random=1791718186866&cv=11&fst=1791718186866&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be6a72h1v9257250440za20ozb9257241934zd9257241934xecxf1&gcd=13l3l3l3l1l1&dma=0&tag_exp=100940059~115938466~115938469~117776796~118897920~118897930~120213116~120385423~120469145~120469153~121046263~121046271~121246026~121246034&u_w=800&u_h=600&url=https%3A%2F%2Fwww.dtek-kem.com.ua%2Fua%2Fshutdowns&rcb=12&frm=0&tiba=%D0%9F%D0%BB%D0%B0%D0%BD%D0%BE%D0%B2%D1%96%20%D1%96%20%D0%B0%D0%B2%D0%B0%D1%80%D1%96%D0%B9%D0%BD%D1%96%20%D0%B2%D1%96%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%BD%D1%8F%20%7C%20%D0%9E%D1%84%D1%96%D1%86%D1%96%D0%B9%D0%BD%D0%B8%D0%B9%20%D1%81%D0%B0%D0%B9&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1076218132.1791718101&uaa=&uab=&uafvl=&uamb=0&uam=&uap=&uapv=&uaw=0&data=event%3Dgtag.config&ept=9&rfmt=3&fmt=4",
+    "index": 22,
+    "src": "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/18295839458/?random=1791718226856&cv=11&fst=1791718226856&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be6a72h1v9257250440za20ozb9257241934zd9257241934xecxf1&gcd=13l3l3l3l1l1&dma=0&tag_exp=115938465~115938469~117776796~118897920~118897930~120213116~120385423~120469145~120469153~121046263~121046271~121246026~121246034&u_w=800&u_h=600&url=https%3A%2F%2Fwww.dtek-kem.com.ua%2Fua%2Fshutdowns&rcb=14&frm=0&tiba=%D0%9F%D0%BB%D0%B0%D0%BD%D0%BE%D0%B2%D1%96%20%D1%96%20%D0%B0%D0%B2%D0%B0%D1%80%D1%96%D0%B9%D0%BD%D1%96%20%D0%B2%D1%96%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B5%D0%BD%D0%BD%D1%8F%20%7C%20%D0%9E%D1%84%D1%96%D1%86%D1%96%D0%B9%D0%BD%D0%B8%D0%B9%20%D1%81%D0%B0%D0%B9&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1076218132.1791718101&uaa=&uab=&uafvl=&uamb=0&uam=&uap=&uapv=&uaw=0&data=event%3Dgtag.config&ept=9&rfmt=3&fmt=4",
     "type": "text/javascript",
     "id": "",
     "content": "",
     "content_length": 0
   },
   {
-    "index": 22,
+    "index": 23,
     "src": "",
     "type": "",
     "id": "",
@@ -176,7 +184,7 @@
     "content_length": 168
   },
   {
-    "index": 23,
+    "index": 24,
     "src": "/assets/ac696e39/jquery.js",
     "type": "",
     "id": "",
@@ -184,7 +192,7 @@
     "content_length": 0
   },
   {
-    "index": 24,
+    "index": 25,
     "src": "/src/js/static/discon-schedule.js",
     "type": "",
     "id": "",
@@ -192,7 +200,7 @@
     "content_length": 0
   },
   {
-    "index": 25,
+    "index": 26,
     "src": "/assets/1e9a2448/yii.js",
     "type": "",
     "id": "",
@@ -200,7 +208,7 @@
     "content_length": 0
   },
   {
-    "index": 26,
+    "index": 27,
     "src": "/dist/js/libs.js",
     "type": "",
     "id": "",
@@ -208,7 +216,7 @@
     "content_length": 0
   },
   {
-    "index": 27,
+    "index": 28,
     "src": "/dist/js/main.min.js",
     "type": "",
     "id": "",
@@ -216,7 +224,7 @@
     "content_length": 0
   },
   {
-    "index": 28,
+    "index": 29,
     "src": "/src/js/static/nForm.class.js",
     "type": "",
     "id": "",
@@ -224,7 +232,7 @@
     "content_length": 0
   },
   {
-    "index": 29,
+    "index": 30,
     "src": "/src/js/static/nForm.check-application.js",
     "type": "",
     "id": "",
@@ -232,7 +240,7 @@
     "content_length": 0
   },
   {
-    "index": 30,
+    "index": 31,
     "src": "",
     "type": "",
     "id": "",
