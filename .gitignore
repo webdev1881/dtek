@@ -3,4 +3,5 @@ logs/
 debug/
 __pycache__/
 .env
+.ruff_cache/
 bot_state.json

@@ -1,0 +1,6 @@
+target-version = "py310"
+line-length = 120
+
+[lint]
+# E/W — стиль PEP 8, F — ошибки (pyflakes), B — частые баги, E722 — голый except
+select = ["E", "W", "F", "B"]
