@@ -453,7 +453,11 @@ def run_once():
             time.sleep(5)
     finally:
         monitor.driver.quit()
-    tgbot.poll_once(monitor.log_message)
+    # Остаток времени слушаем бота (long polling), чтобы команды обрабатывались сразу, а не раз в 10 минут
+    deadline = time.time() + int(os.environ.get('DTEK_LISTEN_SECONDS', '420'))
+    while time.time() < deadline:
+        if not tgbot.poll_once(monitor.log_message, timeout=25):
+            time.sleep(5)
     return 0 if ok else 1
 
 def main():
