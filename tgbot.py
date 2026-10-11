@@ -95,18 +95,28 @@ def _label(group):
     return group[3:]
 
 
-def _group_keyboard():
+def _user_groups(user):
+    """Группы пользователя {группа: хэш последнего отправленного графика}. Понимает и старый формат с одной группой"""
+    if not user:
+        return {}
+    if 'groups' in user:
+        return user['groups']
+    return {user['group']: user.get('hash', '')} if user.get('group') else {}
+
+
+def _group_keyboard(selected=()):
     rows = []
     for i in range(0, len(GROUPS), 6):
-        rows.append([{'text': _label(g), 'callback_data': f'g:{g}'} for g in GROUPS[i:i + 6]])
+        rows.append([{'text': ('✓' if g in selected else '') + _label(g), 'callback_data': f'g:{g}'} for g in GROUPS[i:i + 6]])
     return json.dumps({'inline_keyboard': rows})
 
 
 def ask_group(chat_id):
+    selected = _user_groups(_load_state()['users'].get(str(chat_id)))
     _api('sendMessage', {
         'chat_id': chat_id,
-        'text': 'Выберите вашу группу отключений:',
-        'reply_markup': _group_keyboard(),
+        'text': 'Выберите группы отключений. Можно несколько: нажатие добавляет группу, повторное — убирает (✓ — выбрана).',
+        'reply_markup': _group_keyboard(selected),
     })
 
 
@@ -166,36 +176,59 @@ def _current_fact():
         return None
 
 
-def _subscribe(chat_id, group):
+def _toggle(chat_id, group):
+    """Добавляет группу пользователю или убирает, если она уже выбрана. Возвращает (добавлена ли, все группы)"""
     fact = _current_fact()
     with _lock:
         state = _load_state()
-        state['users'][str(chat_id)] = {'group': group, 'hash': _group_hash(fact, group) if fact else ''}
+        groups = dict(_user_groups(state['users'].get(str(chat_id))))
+        added = group not in groups
+        if added:
+            groups[group] = _group_hash(fact, group) if fact else ''
+        else:
+            del groups[group]
+        if groups:
+            state['users'][str(chat_id)] = {'groups': groups}
+        else:
+            state['users'].pop(str(chat_id), None)
         _save_state(state)
-    _api('sendMessage', {'chat_id': chat_id, 'text': f'Группа {_label(group)} сохранена. Пришлю график, когда он изменится.'})
-    if fact:
-        send_schedule(chat_id, fact, group)
+    return added, groups
 
 
 def _handle(update, log):
     cb = update.get('callback_query')
     if cb:
-        _api('answerCallbackQuery', {'callback_query_id': cb['id']})
         data = cb.get('data', '')
         if data.startswith('g:') and data[2:] in GROUPS:
-            _subscribe(cb['message']['chat']['id'], data[2:])
-            log(f'Подписка: chat {cb["message"]["chat"]["id"]} -> {data[2:]}')
+            chat_id, group = cb['message']['chat']['id'], data[2:]
+            added, groups = _toggle(chat_id, group)
+            _api('answerCallbackQuery', {
+                'callback_query_id': cb['id'],
+                'text': f'Группа {_label(group)} ' + ('добавлена' if added else 'убрана'),
+            })
+            _api('editMessageReplyMarkup', {
+                'chat_id': chat_id,
+                'message_id': cb['message']['message_id'],
+                'reply_markup': _group_keyboard(groups),
+            })
+            log(f'Группа {group} {"добавлена" if added else "убрана"}: chat {chat_id}')
+            fact = _current_fact()
+            if added and fact:
+                send_schedule(chat_id, fact, group)
+        else:
+            _api('answerCallbackQuery', {'callback_query_id': cb['id']})
         return
     msg = update.get('message')
     if not msg:
         return
     chat_id = msg['chat']['id']
     text = (msg.get('text') or '').strip().lower()
-    user = _load_state()['users'].get(str(chat_id))
+    user = _user_groups(_load_state()['users'].get(str(chat_id)))
     if text in ('/schedule', '/график') and user:
         fact = _current_fact()
         if fact:
-            send_schedule(chat_id, fact, user['group'])
+            for group in user:
+                send_schedule(chat_id, fact, group)
         else:
             _api('sendMessage', {'chat_id': chat_id, 'text': 'График ещё не получен.'})
     elif text.startswith('/stop'):
@@ -207,7 +240,7 @@ def _handle(update, log):
     elif text.startswith('/start') or text.startswith('/group') or not user:
         ask_group(chat_id)
     else:
-        _api('sendMessage', {'chat_id': chat_id, 'text': '/schedule — график, /group — сменить группу, /stop — отключить рассылку'})
+        _api('sendMessage', {'chat_id': chat_id, 'text': '/schedule — график, /group — выбрать группы, /stop — отключить рассылку'})
 
 
 def poll_once(log=print, timeout=0):
@@ -241,16 +274,19 @@ def notify_all(fact, log=print):
         state = _load_state()
         users = dict(state['users'])
     for chat_id, user in users.items():
-        h = _group_hash(fact, user['group'])
-        if h == user.get('hash'):
-            continue
-        if send_schedule(chat_id, fact, user['group'], 'График изменился!'):
-            with _lock:
-                state = _load_state()
-                if chat_id in state['users']:
-                    state['users'][chat_id]['hash'] = h
-                    _save_state(state)
-            log(f'Отправлен график: chat {chat_id}, группа {user["group"]}')
+        for group, old_hash in _user_groups(user).items():
+            h = _group_hash(fact, group)
+            if h == old_hash:
+                continue
+            if send_schedule(chat_id, fact, group, 'График изменился!'):
+                with _lock:
+                    state = _load_state()
+                    groups = dict(_user_groups(state['users'].get(chat_id)))
+                    if group in groups:
+                        groups[group] = h
+                        state['users'][chat_id] = {'groups': groups}
+                        _save_state(state)
+                log(f'Отправлен график: chat {chat_id}, группа {group}')
 
 
 def start_polling(log=print):
