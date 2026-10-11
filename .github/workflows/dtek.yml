@@ -2,7 +2,7 @@ name: dtek
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/2 * * * *'
   workflow_dispatch:
 
 concurrency:
@@ -12,7 +12,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -30,6 +30,7 @@ jobs:
       - run: python -u p.py --once
         env:
           PYTHONIOENCODING: utf-8
+          DTEK_LISTEN_SECONDS: '60'
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       - uses: actions/cache/save@v4
         if: always()
