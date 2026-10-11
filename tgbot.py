@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import threading
 import time
 import urllib.parse
@@ -37,9 +38,10 @@ def _send_photo(chat_id, png, caption=''):
     nl = bytes([13, 10])  # CRLF
     parts = []
     for name, value in (('chat_id', str(chat_id)), ('caption', caption)):
-        parts.append(f'--{boundary}'.encode() + nl + f'Content-Disposition: form-data; name="{name}"'.encode() + nl + nl + value.encode() + nl)
-    parts.append(f'--{boundary}'.encode() + nl + b'Content-Disposition: form-data; name="photo"; filename="schedule.png"' + nl
-                 + b'Content-Type: image/png' + nl + nl + png + nl)
+        head = f'--{boundary}'.encode() + nl + f'Content-Disposition: form-data; name="{name}"'.encode()
+        parts.append(head + nl + nl + value.encode() + nl)
+    disposition = b'Content-Disposition: form-data; name="photo"; filename="schedule.png"'
+    parts.append(f'--{boundary}'.encode() + nl + disposition + nl + b'Content-Type: image/png' + nl + nl + png + nl)
     parts.append(f'--{boundary}--'.encode() + nl)
     req = urllib.request.Request(f'https://api.telegram.org/bot{token}/sendPhoto', b''.join(parts),
                                  {'Content-Type': f'multipart/form-data; boundary={boundary}'})
@@ -50,19 +52,25 @@ def _send_photo(chat_id, png, caption=''):
         return False
 
 
+def _short_year(text):
+    """'11.10.2026 12:37' -> '11.10.26 12:37'"""
+    return re.sub(r'(\d{2}\.\d{2}\.)20(\d{2})', r'\g<1>\g<2>', text)
+
+
 def _checked_at():
     """Время последней проверки сайта (время записи schedule.json) по Киеву"""
     try:
         ts = os.path.getmtime(SCHEDULE_FILE)
     except OSError:
         ts = time.time()
-    return datetime.fromtimestamp(ts, schedule_image.KYIV).strftime('%d.%m.%Y %H:%M')
+    return datetime.fromtimestamp(ts, schedule_image.KYIV).strftime('%d.%m.%y %H:%M')
 
 
 def send_schedule(chat_id, fact, group, title=''):
     """График группы картинками (по одной на сутки). Если картинку нарисовать не вышло — текстом"""
     ok = False
-    caption = '\n'.join(filter(None, [title, f'Обновлено на сайте: {fact.get("update", "?")}', f'Проверено: {_checked_at()}']))
+    site = _short_year(fact.get('update', '?'))
+    caption = '\n'.join(filter(None, [title, f'Сайт: {site}', f'Проверено: {_checked_at()}']))
     for ts, day in sorted(fact.get('data', {}).items()):
         hours = day.get(group)
         if hours is None:
@@ -107,7 +115,8 @@ def _user_groups(user):
 def _group_keyboard(selected=()):
     rows = []
     for i in range(0, len(GROUPS), 6):
-        rows.append([{'text': ('✓' if g in selected else '') + _label(g), 'callback_data': f'g:{g}'} for g in GROUPS[i:i + 6]])
+        row = GROUPS[i:i + 6]
+        rows.append([{'text': ('✓' if g in selected else '') + _label(g), 'callback_data': f'g:{g}'} for g in row])
     return json.dumps({'inline_keyboard': rows})
 
 
@@ -115,7 +124,8 @@ def ask_group(chat_id):
     selected = _user_groups(_load_state()['users'].get(str(chat_id)))
     _api('sendMessage', {
         'chat_id': chat_id,
-        'text': 'Выберите группы отключений. Можно несколько: нажатие добавляет группу, повторное — убирает (✓ — выбрана).',
+        'text': 'Выберите группы отключений. Можно несколько: нажатие добавляет группу, '
+                'повторное — убирает (✓ — выбрана).',
         'reply_markup': _group_keyboard(selected),
     })
 
@@ -147,9 +157,9 @@ def _fmt(minutes):
 
 
 def format_schedule(fact, group):
-    lines = [f'Группа {_label(group)}, обновлено на сайте: {fact.get("update", "?")}']
+    lines = [f'Группа {_label(group)}, сайт: {_short_year(fact.get("update", "?"))}']
     for ts, day in sorted(fact.get('data', {}).items()):
-        date = schedule_image.day_date(ts).strftime('%d.%m.%Y')
+        date = schedule_image.day_date(ts).strftime('%d.%m.%y')
         hours = day.get(group)
         if hours is None:
             continue
@@ -240,7 +250,8 @@ def _handle(update, log):
     elif text.startswith('/start') or text.startswith('/group') or not user:
         ask_group(chat_id)
     else:
-        _api('sendMessage', {'chat_id': chat_id, 'text': '/schedule — график, /group — выбрать группы, /stop — отключить рассылку'})
+        help_text = '/schedule — график, /group — выбрать группы, /stop — отключить рассылку'
+        _api('sendMessage', {'chat_id': chat_id, 'text': help_text})
 
 
 def poll_once(log=print, timeout=0):

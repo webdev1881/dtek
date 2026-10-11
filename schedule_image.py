@@ -59,7 +59,7 @@ def render_day(group, ts, hours):
     w, h = 540, 900
     img = Image.new('RGB', (w, h), BG)
     d = ImageDraw.Draw(img)
-    f_title, f_title_b = _font(REGULAR, 32), _font(BOLD, 32)
+    f_title, f_title_b = _font(REGULAR, 28), _font(BOLD, 28)
     f_hour, f_small = _font(REGULAR, 28), _font(REGULAR, 17)
 
     def centered(parts, y):
@@ -71,8 +71,8 @@ def render_day(group, ts, hours):
             x += d.textlength(t, font=f)
 
     date = day_date(ts)
-    centered([('Група: ', f_title), (group[3:], f_title_b)], 12)
-    centered([(f'Дата: {date:%Y-%m-%d}, ', f_title), (WEEKDAYS[date.weekday()], f_title_b)], 58)
+    centered([('Група: ', f_title), (group[3:], f_title_b)], 14)
+    centered([(f'Дата: {date:%y-%m-%d}, ', f_title), (WEEKDAYS[date.weekday()], f_title_b)], 56)
 
     light = 0.0
     for hour in range(24):
