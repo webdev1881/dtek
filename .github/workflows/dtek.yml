@@ -30,6 +30,7 @@ jobs:
           PYTHONIOENCODING: utf-8
           WORKER_URL: ${{ secrets.WORKER_URL }}
           UPLOAD_TOKEN: ${{ secrets.UPLOAD_TOKEN }}
+          FIREBASE_SECRET: ${{ secrets.FB }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

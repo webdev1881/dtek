@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 import re
+import urllib.parse
 import urllib.request
 from datetime import datetime
 
@@ -33,8 +34,40 @@ def _group_hash(fact, group):
     return json.dumps([d.get(group) for _, d in sorted(fact.get('data', {}).items())], sort_keys=True)
 
 
+FIREBASE_DB = 'https://svitlo-ac9a6-default-rtdb.europe-west1.firebasedatabase.app'
+_CODES = {'yes': 'y', 'no': 'n', 'first': 'f', 'second': 's'}
+
+
+def publish_firebase(fact, log=print):
+    """Кладёт график в Firebase (schedule/) для карты svitlo-map: день -> группа ('43_1') -> 24 символа"""
+    secret = os.environ.get('FIREBASE_SECRET')
+    if not secret:
+        log('FIREBASE_SECRET не задан — запись в Firebase пропущена', 'WARNING')
+        return False
+    days = {
+        day: {
+            g.removeprefix('GPV').replace('.', '_'): ''.join(_CODES.get(hrs.get(str(h)), 'm') for h in range(1, 25))
+            for g, hrs in groups.items()
+        }
+        for day, groups in fact.get('data', {}).items()
+    }
+    if not days:
+        return False
+    body = json.dumps({'updated': fact.get('update', ''), 'days': days}).encode()
+    url = f'{FIREBASE_DB}/schedule.json?auth={urllib.parse.quote(secret)}'
+    req = urllib.request.Request(url, body, {'content-type': 'application/json'}, method='PUT')
+    try:
+        urllib.request.urlopen(req, timeout=30).close()
+        log(f'✓ График записан в Firebase: дней {len(days)}', 'SUCCESS')
+        return True
+    except Exception as e:
+        log(f'Ошибка записи в Firebase: {type(e).__name__}', 'ERROR')
+        return False
+
+
 def publish(fact, log=print):
     """Отдаёт график боту на Cloudflare Worker. Если данные не менялись — только обновляет время проверки"""
+    publish_firebase(fact, log)
     if not os.environ.get('WORKER_URL') or not os.environ.get('UPLOAD_TOKEN'):
         log('WORKER_URL/UPLOAD_TOKEN не заданы — публикация в бота пропущена', 'WARNING')
         return False
